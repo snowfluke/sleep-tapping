@@ -1,6 +1,10 @@
 # Sleep Tapping
 
-<img src=".github/screenshot.png" alt="Sleep Tapping session screen with the left pad lit, a breathing ring and the tempo curve" width="390">
+<p>
+  <img src=".github/screenshots/session.png" alt="Session screen during a session, with the left pad lit, the breathing ring and the tempo curve" width="32%">
+  <img src=".github/screenshots/settings.png" alt="Settings screen with the tap sound list" width="32%">
+  <img src=".github/screenshots/challenge.png" alt="Five-night challenge screen with the sleep journal" width="32%">
+</p>
 
 Sleep Tapping plays a left-right tapping rhythm that slows from 68 to 36 BPM while you pat your lap and breathe in time. Jim Donovan describes the method in his TEDxYoungstown talk "How to trick your brain into falling asleep". The app runs in the browser at https://snowfluke.github.io/sleep-tapping/.
 
