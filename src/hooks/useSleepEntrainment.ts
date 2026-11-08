@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { SessionSettings, BreathState } from '../types';
 import { sleepAudio } from '../lib/audioEngine';
 import { hapticEngine } from '../lib/hapticEngine';
+import { tempoAt } from '../lib/tempoCurve';
 
 export interface EntrainmentStatus {
   isPlaying: boolean;
@@ -48,43 +49,6 @@ export function useSleepEntrainment(settings: SessionSettings, onSessionComplete
   const isPausedRef = useRef(false);
   const timerFrameRef = useRef<number | null>(null);
 
-  // Calculate current BPM based on progress and deceleration curve
-  const calculateBpmAtProgress = useCallback((progress: number, cfg: SessionSettings): number => {
-    const { startBpm, endBpm, decelerationCurve } = cfg;
-    const clampedProg = Math.max(0, Math.min(1, progress));
-    const range = startBpm - endBpm;
-
-    if (decelerationCurve === 'stepped') {
-      // Jim Donovan's 3-stage protocol:
-      // Phase 1 (0% - 15%): Brief frequency entrainment lock-in at starting tempo
-      // Phase 2 (15% - 65%): First gradual deceleration down to mid-tempo
-      // Phase 3 (65% - 100%): "Now slow the rhythm down... and slow it down again"
-      if (clampedProg < 0.15) {
-        return startBpm;
-      } else if (clampedProg < 0.65) {
-        const subProg = (clampedProg - 0.15) / 0.50;
-        const midBpm = startBpm - range * 0.50;
-        return startBpm - (startBpm - midBpm) * subProg;
-      } else {
-        const subProg = (clampedProg - 0.65) / 0.35;
-        const midBpm = startBpm - range * 0.50;
-        return midBpm - (midBpm - endBpm) * subProg;
-      }
-    } else if (decelerationCurve === 'gentle-late') {
-      // Sustained for first 25%, then smooth descent
-      if (clampedProg < 0.25) {
-        return startBpm;
-      } else {
-        const subProg = (clampedProg - 0.25) / 0.75;
-        return startBpm - range * Math.pow(subProg, 1.2);
-      }
-    } else {
-      // Continuous smooth linear deceleration (Default):
-      // Every single beat is progressively and noticeably slower from start to finish
-      return startBpm - range * clampedProg;
-    }
-  }, []);
-
   // Calculate breath guidance given breath mode and beat count
   const calculateBreath = useCallback((count: number, cfg: SessionSettings, bpm: number, isEnding: boolean): BreathState => {
     if (cfg.breathingMode === 'off') {
@@ -92,7 +56,7 @@ export function useSleepEntrainment(settings: SessionSettings, onSessionComplete
     }
 
     if (isEnding) {
-      return { phase: 'exhale', count: 4, totalCounts: 4, instruction: 'Relax and let go...' };
+      return { phase: 'exhale', count: 4, totalCounts: 4, instruction: 'Relax and let go' };
     }
 
     if (cfg.breathingMode === 'jim-4-4') {
@@ -105,7 +69,7 @@ export function useSleepEntrainment(settings: SessionSettings, onSessionComplete
           phase: 'inhale',
           count: currentCount,
           totalCounts: 4,
-          instruction: currentCount === 1 ? 'Slowly breathing in...' : `Inhale · ${currentCount}`,
+          instruction: currentCount === 1 ? 'Breathe in slowly' : `Inhale · ${currentCount}`,
         };
       } else {
         const currentCount = step - 4 + 1;
@@ -113,7 +77,7 @@ export function useSleepEntrainment(settings: SessionSettings, onSessionComplete
           phase: 'exhale',
           count: currentCount,
           totalCounts: 4,
-          instruction: currentCount === 1 ? 'Slowly breathing out...' : `Exhale · ${currentCount}`,
+          instruction: currentCount === 1 ? 'Breathe out slowly' : `Exhale · ${currentCount}`,
         };
       }
     } else if (cfg.breathingMode === 'relax-4-7-8') {
@@ -179,13 +143,13 @@ export function useSleepEntrainment(settings: SessionSettings, onSessionComplete
     setTimeRemaining(remaining);
 
     // Calculate current decelerated tempo
-    const computedBpm = calculateBpmAtProgress(progress, cfg);
+    const computedBpm = tempoAt(progress, cfg);
     setCurrentBpm(Math.round(computedBpm));
 
     // Check if session has ended
     if (remaining <= 0) {
       stopSession();
-      setAnnouncement('Session complete. Rest deeply.');
+      setAnnouncement('Session complete');
       if (onSessionCompleteRef.current) {
         onSessionCompleteRef.current();
       }
@@ -194,13 +158,13 @@ export function useSleepEntrainment(settings: SessionSettings, onSessionComplete
 
     // Dynamic announcements matching Jim Donovan's prompts
     if (progress > 0.93) {
-      setAnnouncement('Slow it down again... Four, three, two, one.');
+      setAnnouncement('Slow it down again');
     } else if (progress > 0.78) {
-      setAnnouncement('And now, slow the tapping down...');
+      setAnnouncement('Now slow the tapping down');
     } else if (progress > 0.12) {
-      setAnnouncement(`Decelerating cadence towards ${cfg.endBpm} BPM...`);
+      setAnnouncement(`Slowing toward ${cfg.endBpm} BPM`);
     } else {
-      setAnnouncement('Lock into the rhythm: Right, Left, Right, Left.');
+      setAnnouncement('Tap right, left, right, left');
     }
 
     // Schedule next beat if time has arrived
@@ -229,7 +193,7 @@ export function useSleepEntrainment(settings: SessionSettings, onSessionComplete
     }
 
     timerFrameRef.current = requestAnimationFrame(runScheduler);
-  }, [calculateBpmAtProgress, calculateBreath]);
+  }, [calculateBreath]);
 
   // Start session
   const startSession = async () => {
@@ -261,7 +225,7 @@ export function useSleepEntrainment(settings: SessionSettings, onSessionComplete
     setCurrentBpm(cfg.startBpm);
     setCurrentSide('left');
     setTapCount(0);
-    setAnnouncement('Begin tapping gently on your lap...');
+    setAnnouncement('Tap gently on your lap');
 
     timerFrameRef.current = requestAnimationFrame(runScheduler);
   };

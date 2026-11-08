@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { BilateralPads } from './components/BilateralPads';
 import { BreathingPacer } from './components/BreathingPacer';
@@ -35,11 +35,14 @@ const DEFAULT_CHALLENGE: ChallengeEntry[] = [
   { day: 5, completed: false, durationMinutes: 3 },
 ];
 
+const SETTINGS_KEY = 'sleep-tapping:settings';
+const CHALLENGE_KEY = 'sleep-tapping:challenge';
+
 export default function App() {
   // Load settings from localStorage
   const [settings, setSettings] = useState<SessionSettings>(() => {
     try {
-      const saved = localStorage.getItem('braintap_settings');
+      const saved = localStorage.getItem(SETTINGS_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         // Ensure decelerationCurve defaults to smooth if previously defaulted to stepped
@@ -58,7 +61,7 @@ export default function App() {
   // Load 5-night challenge data
   const [challengeEntries, setChallengeEntries] = useState<ChallengeEntry[]>(() => {
     try {
-      const saved = localStorage.getItem('braintap_challenge');
+      const saved = localStorage.getItem(CHALLENGE_KEY);
       if (saved) return JSON.parse(saved);
     } catch {
       // fallback
@@ -72,7 +75,7 @@ export default function App() {
   // Save settings when changed
   useEffect(() => {
     try {
-      localStorage.setItem('braintap_settings', JSON.stringify(settings));
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     } catch {
       // ignore
     }
@@ -81,7 +84,7 @@ export default function App() {
   // Save challenge entries when changed
   useEffect(() => {
     try {
-      localStorage.setItem('braintap_challenge', JSON.stringify(challengeEntries));
+      localStorage.setItem(CHALLENGE_KEY, JSON.stringify(challengeEntries));
     } catch {
       // ignore
     }
@@ -90,7 +93,7 @@ export default function App() {
   // Handle session completion
   const handleSessionComplete = () => {
     setShowCompletionToast(true);
-    // Automatically suggest recording night if on 3-min+ session
+    // A 3-minute or longer session counts as a challenge night. The rating and notes stay empty for the user.
     if (settings.durationSeconds >= 180) {
       setTimeout(() => {
         // Find first incomplete day
@@ -107,8 +110,6 @@ export default function App() {
                     ...e,
                     completed: true,
                     dateCompleted: nowStr,
-                    notes: 'Completed 3+ min brain tapping session.',
-                    sleepQuality: 5,
                   }
                 : e
             )
@@ -122,7 +123,6 @@ export default function App() {
     isPlaying,
     isPaused,
     timeRemaining,
-    totalDuration,
     progress,
     currentBpm,
     currentSide,
@@ -168,7 +168,7 @@ export default function App() {
   };
 
   const handleResetChallenge = () => {
-    if (window.confirm('Reset your 5-Night Challenge progress?')) {
+    if (window.confirm('Reset your 5-night challenge progress?')) {
       setChallengeEntries(DEFAULT_CHALLENGE);
     }
   };
@@ -190,8 +190,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070a12] text-slate-100 flex flex-col justify-between selection:bg-indigo-500/20">
-      {/* OLED Pitch-black Fullscreen Overlay */}
+    <div className="flex min-h-screen flex-col bg-night-1 text-ink-1">
       {settings.oledPitchBlack && (
         <OledSleepCover
           onExit={handleToggleOled}
@@ -203,61 +202,51 @@ export default function App() {
         />
       )}
 
-      {/* Top Navigation */}
       <Header
-        oledPitchBlack={settings.oledPitchBlack}
         onToggleOled={handleToggleOled}
-        vibrationIntensity={settings.vibrationIntensity}
         currentBpm={currentBpm}
+        currentSide={currentSide}
         isPlaying={isPlaying}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-lg mx-auto flex flex-col justify-start pb-24 overflow-y-auto">
-        {/* Completion Banner */}
+      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col tall:pb-24">
         {showCompletionToast && (
-          <div className="mx-4 mt-3 p-3.5 rounded-2xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-200 text-xs flex items-center justify-between shadow-xl animate-in fade-in duration-300">
-            <div>
-              <p className="font-semibold text-emerald-100">Session complete. Sweet dreams!</p>
-              <p className="text-[11px] text-emerald-300/80">
-                Your brain is entrained to deep rest. Lay back and relax.
-              </p>
+          <div
+            role="status"
+            className="mx-4 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-night-2 p-4"
+          >
+            <div className="min-w-0">
+              <p className="text-[15px] font-medium text-ink-1">Session complete</p>
+              <p className="text-sm text-ink-2">Lie back and let sleep come</p>
             </div>
             <button
+              type="button"
               onClick={() => setShowCompletionToast(false)}
-              className="px-2.5 py-1 rounded-lg bg-emerald-900/60 text-emerald-200 text-xs hover:bg-emerald-800"
+              className="h-9 rounded-lg px-3 text-sm text-ink-2 transition-colors duration-150 hover:bg-night-3 hover:text-ink-1"
             >
               Dismiss
             </button>
           </div>
         )}
 
-        {/* Tab 1: Active Entrainment Session */}
         {activeTab === 'session' && (
-          <div className="flex-1 flex flex-col justify-start sm:justify-between px-4 py-2 space-y-3">
-            {/* Bilateral Hands/Lap Pads */}
+          <div className="flex flex-col gap-6 px-4 py-4">
             <BilateralPads
               currentSide={currentSide}
               isPlaying={isPlaying}
               stereoPanning={settings.stereoPanning}
               onManualTap={triggerManualTap}
-              soundName={settings.soundPreset}
             />
-
-            {/* Breathing Pacer ring */}
             <BreathingPacer
               breathState={breathState}
               breathingMode={settings.breathingMode}
               isPlaying={isPlaying}
               announcement={announcement}
             />
-
-            {/* Session Controls (Play/Pause, Countdown, BPM, Duration) */}
             <SessionControls
               isPlaying={isPlaying}
               isPaused={isPaused}
               timeRemaining={timeRemaining}
-              totalDuration={totalDuration}
               progress={progress}
               currentBpm={currentBpm}
               settings={settings}
@@ -270,7 +259,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: Customization (Sound, Tempo, Vibration, Ambient) */}
         {activeTab === 'customize' && (
           <CustomizeTab
             settings={settings}
@@ -280,7 +268,6 @@ export default function App() {
           />
         )}
 
-        {/* Tab 3: 5-Night Challenge Tracker */}
         {activeTab === 'challenge' && (
           <ChallengeTracker
             challengeEntries={challengeEntries}
@@ -290,13 +277,9 @@ export default function App() {
           />
         )}
 
-        {/* Tab 4: Science & TEDx Story */}
-        {activeTab === 'science' && (
-          <ScienceGuide onStartPractice={() => setActiveTab('session')} />
-        )}
+        {activeTab === 'science' && <ScienceGuide onStartPractice={() => setActiveTab('session')} />}
       </main>
 
-      {/* Ergonomic Mobile Bottom Tab Bar */}
       <BottomTabBar
         activeTab={activeTab}
         onTabChange={(tab) => {

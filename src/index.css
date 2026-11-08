@@ -1,38 +1,58 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    --font-serif: 'Fraunces', Georgia, serif;
-  }
+/* Warm near-black ramp with one ember accent: the app runs in a dark bedroom, so no blue light. */
+@theme {
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
+  --color-night-0: #0d0c0b;
+  --color-night-1: #12110f;
+  --color-night-2: #1a1816;
+  --color-night-3: #24221f;
+  --color-line: rgb(239 233 222 / 0.08);
+  --color-ink-1: #efe9de;
+  --color-ink-2: #aaa398;
+  --color-ink-3: #8a847a;
+  --color-ember: #e3a063;
+  --color-ember-ink: #1a1208;
+  --color-calm: #7fbf95;
+  --color-alert: #e5484d;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Short landscape screens keep the header and tab bar in the page flow. */
+@custom-variant tall (@media (min-height: 480px));
+
+@layer base {
   body {
+    background-color: var(--color-night-1);
+    color: var(--color-ink-1);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
-    user-select: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ember);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: rgb(227 160 99 / 0.3);
   }
 }
 
-/* Custom glow and breathing pulse */
-@keyframes breathGlow {
-  0%, 100% {
-    transform: scale(0.94);
-    opacity: 0.45;
-    filter: blur(28px);
-  }
-  50% {
-    transform: scale(1.12);
-    opacity: 0.85;
-    filter: blur(40px);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }
 
-.animate-breath-glow {
-  animation: breathGlow 8s ease-in-out infinite;
-}
-
-/* Custom scrollbar for mobile drawers */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -41,6 +61,6 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
+  background: rgb(239 233 222 / 0.12);
+  border-radius: 4px;
 }

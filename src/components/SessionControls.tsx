@@ -1,12 +1,13 @@
 import React from 'react';
-import { Play, Pause, Square, Flame, Clock, Sparkles } from 'lucide-react';
+import { Play, Pause, Square } from 'lucide-react';
 import { SessionSettings } from '../types';
+import { TempoCurve } from './TempoCurve';
+import { formatClock } from '../lib/formatClock';
 
 interface SessionControlsProps {
   isPlaying: boolean;
   isPaused: boolean;
   timeRemaining: number;
-  totalDuration: number;
   progress: number;
   currentBpm: number;
   settings: SessionSettings;
@@ -17,11 +18,20 @@ interface SessionControlsProps {
   onSelectDuration: (seconds: number) => void;
 }
 
+const DURATIONS = [
+  { label: '15 sec', seconds: 15 },
+  { label: '3 min', seconds: 180 },
+  { label: '5 min', seconds: 300 },
+  { label: '10 min', seconds: 600 },
+];
+
+const primaryButton =
+  'flex h-12 min-w-0 flex-1 touch-manipulation items-center justify-center gap-2 rounded-xl text-[15px] font-medium transition-[background-color,transform] duration-150 ease-soft active:scale-[0.98]';
+
 export const SessionControls: React.FC<SessionControlsProps> = ({
   isPlaying,
   isPaused,
   timeRemaining,
-  totalDuration,
   progress,
   currentBpm,
   settings,
@@ -31,124 +41,80 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
   onStop,
   onSelectDuration,
 }) => {
-  // Format seconds to mm:ss
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
-  const presetDurations = [
-    { label: '15s Test', seconds: 15, desc: 'Deceleration preview' },
-    { label: '3 min Challenge', seconds: 180, desc: 'Jim Donovan challenge' },
-    { label: '5 min Rest', seconds: 300, desc: 'Standard wind-down' },
-    { label: '10 min Deep', seconds: 600, desc: 'Full sleep transition' },
-  ];
-
   return (
-    <div className="w-full flex flex-col items-center">
-      {/* Time & BPM Stats readout */}
-      <div className="w-full max-w-sm flex items-center justify-between px-2 mb-2">
-        <div className="flex flex-col">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
-            Time Remaining
-          </span>
-          <span className="text-xl sm:text-2xl font-bold font-mono tabular-nums text-slate-100 tracking-tight">
-            {formatTime(timeRemaining)}
+    <div className="flex w-full flex-col gap-5">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-ink-3">Time left</span>
+          <span className="font-mono text-[28px] font-medium tabular-nums leading-none text-ink-1">
+            {formatClock(timeRemaining)}
           </span>
         </div>
-
-        <div className="flex flex-col items-end">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
-            {isPlaying ? (
-              <span className="text-emerald-400 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Decelerating → {settings.endBpm} BPM
-              </span>
-            ) : (
-              <span>Target: {settings.startBpm} → {settings.endBpm} BPM</span>
-            )}
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-xs text-ink-3">{isPlaying ? `Slowing to ${settings.endBpm}` : 'Tempo'}</span>
+          <span className="font-mono text-[28px] font-medium tabular-nums leading-none text-ember">
+            {currentBpm}
+            <span className="ml-1 text-sm font-normal text-ink-3">BPM</span>
           </span>
-          <div className="flex items-center gap-1">
-            <span className="text-xl sm:text-2xl font-bold font-mono tabular-nums text-indigo-300">
-              {currentBpm}
-            </span>
-            <span className="text-[11px] text-slate-400">BPM</span>
-          </div>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="w-full max-w-sm h-1.5 bg-slate-800/80 rounded-full overflow-hidden mb-3">
-        <div
-          className="h-full bg-gradient-to-r from-indigo-500 to-teal-400 transition-all duration-300 rounded-full"
-          style={{ width: `${progress * 100}%` }}
-        />
-      </div>
+      <TempoCurve settings={settings} progress={progress} />
 
-      {/* Quick Duration selector (only editable when stopped) */}
       {!isPlaying && (
-        <div className="w-full max-w-sm grid grid-cols-4 gap-1 p-1 bg-slate-900/60 rounded-xl border border-slate-800/80 mb-3">
-          {presetDurations.map((p) => {
-            const isSelected = settings.durationSeconds === p.seconds;
+        <div role="radiogroup" aria-label="Session length" className="grid grid-cols-4 gap-1 rounded-xl border border-line bg-night-2 p-1">
+          {DURATIONS.map((d) => {
+            const isSelected = settings.durationSeconds === d.seconds;
             return (
               <button
-                key={p.seconds}
+                key={d.seconds}
                 type="button"
-                onClick={() => onSelectDuration(p.seconds)}
-                className={`py-1.5 px-1 text-center rounded-lg transition-all text-[11px] sm:text-xs font-medium ${
+                role="radio"
+                aria-checked={isSelected}
+                onClick={() => onSelectDuration(d.seconds)}
+                className={`h-9 min-w-0 truncate rounded-lg px-1 text-sm transition-colors duration-150 ${
                   isSelected
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    ? 'bg-night-3 text-ink-1 shadow-[inset_0_1px_0_rgb(255_255_255/0.08)]'
+                    : 'text-ink-3 hover:text-ink-1'
                 }`}
               >
-                <div className="truncate">{p.label}</div>
+                {d.label}
               </button>
             );
           })}
         </div>
       )}
 
-      {/* Primary Action Buttons (Thumb Zone) */}
-      <div className="flex items-center gap-3 w-full max-w-sm pb-2">
+      <div className="flex items-center gap-3">
         {!isPlaying ? (
-          <button
-            type="button"
-            onClick={onStart}
-            className="flex-1 h-13 sm:h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 transition-all touch-manipulation cursor-pointer"
-          >
-            <Play className="w-5 h-5 fill-current" />
-            <span>Begin Brain Tapping</span>
+          <button type="button" onClick={onStart} className={`${primaryButton} bg-ember text-ember-ink hover:bg-ember/90`}>
+            <Play className="size-4 fill-current" strokeWidth={1.5} />
+            Start tapping
           </button>
         ) : (
           <>
             {isPaused ? (
-              <button
-                type="button"
-                onClick={onResume}
-                className="flex-1 h-13 sm:h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 transition-all touch-manipulation cursor-pointer"
-              >
-                <Play className="w-5 h-5 fill-current" />
-                <span>Resume Cadence</span>
+              <button type="button" onClick={onResume} className={`${primaryButton} bg-ember text-ember-ink hover:bg-ember/90`}>
+                <Play className="size-4 fill-current" strokeWidth={1.5} />
+                Resume
               </button>
             ) : (
               <button
                 type="button"
                 onClick={onPause}
-                className="flex-1 h-13 sm:h-14 rounded-2xl bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-slate-100 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 border border-slate-700 transition-all touch-manipulation cursor-pointer"
+                className={`${primaryButton} border border-line bg-night-3 text-ink-1 hover:bg-night-2`}
               >
-                <Pause className="w-5 h-5" />
-                <span>Pause</span>
+                <Pause className="size-4" strokeWidth={1.5} />
+                Pause
               </button>
             )}
-
             <button
               type="button"
               onClick={onStop}
-              title="Stop Session"
-              className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-slate-900 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-900/50 flex items-center justify-center active:scale-95 transition-all touch-manipulation cursor-pointer shrink-0"
+              aria-label="Stop session"
+              className="flex size-12 shrink-0 touch-manipulation items-center justify-center rounded-xl border border-line bg-night-2 text-ink-2 transition-[color,background-color,transform] duration-150 ease-soft hover:text-alert active:scale-[0.98]"
             >
-              <Square className="w-5 h-5" />
+              <Square className="size-4" strokeWidth={1.5} />
             </button>
           </>
         )}

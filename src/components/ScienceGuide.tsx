@@ -1,126 +1,107 @@
 import React from 'react';
-import { BookOpen, Sparkles, HeartPulse, Brain, Waves, ArrowRight, Quote } from 'lucide-react';
+import { HeartPulse, Hand, Waves, ArrowRight, LucideIcon } from 'lucide-react';
+import bedside from '../assets/images/bedside.jpg';
 
 interface ScienceGuideProps {
   onStartPractice: () => void;
 }
 
+const STEPS = [
+  { title: 'Tap like a ticking stopwatch', body: 'Rest your hands on your lap and tap lightly: right, left, right, left.' },
+  { title: 'Breathe slowly', body: 'Breathe in for 4 counts and out for 4 counts, and close your eyes.' },
+  { title: 'Slow the rhythm down', body: 'Let the taps get slower, and when you feel drowsy, lie back.' },
+];
+
 export const ScienceGuide: React.FC<ScienceGuideProps> = ({ onStartPractice }) => {
   return (
-    <div className="w-full max-w-lg mx-auto pb-24 px-4 pt-4 space-y-6">
-      {/* Title */}
-      <div>
-        <h2 className="text-xl font-bold text-slate-100">
-          The Science of "Brain Tapping"
-        </h2>
-        <p className="text-xs text-slate-400 mt-0.5">
-          Based on "How To Trick Your Brain Into Falling Asleep" by Jim Donovan (TEDxYoungstown)
+    <article className="flex flex-col gap-10 px-4 py-6">
+      <header>
+        <h2 className="font-display text-[28px] font-normal leading-tight text-ink-1">The idea behind sleep tapping</h2>
+        <p className="mt-2 text-[15px] leading-relaxed text-ink-2">
+          Jim Donovan describes this method in his TEDxYoungstown talk "How to trick your brain into falling asleep",
+          and this page sums up the talk in our own words.
         </p>
-      </div>
+      </header>
 
-      {/* Atmospheric Bedroom Banner */}
-      <div className="relative rounded-2xl overflow-hidden border border-slate-800/80 aspect-[16/9] shadow-lg">
-        <img
-          src="/src/assets/images/sleep_rhythm_bedside_1791094586320.jpg"
-          alt="Peaceful nocturnal bedroom ambiance"
-          referrerPolicy="no-referrer"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#070a12] via-[#070a12]/40 to-transparent flex flex-col justify-end p-4">
-          <span className="text-[11px] font-semibold text-indigo-300 tracking-wider uppercase">
-            Frequency-Following Response
-          </span>
-          <p className="text-xs text-slate-200 font-medium">
-            Entraining your brain to deep delta rest through slow rhythm
-          </p>
-        </div>
-      </div>
+      <img
+        src={bedside}
+        alt="A bedside table at night with a lit lamp, a wristwatch and a cup of tea"
+        width={1376}
+        height={768}
+        className="aspect-[16/9] w-full max-w-full rounded-2xl object-cover"
+      />
 
-      {/* Quote Banner */}
-      <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-900/60 relative">
-        <Quote className="w-6 h-6 text-indigo-400/40 mb-2" />
-        <p className="text-sm font-serif italic text-indigo-100 leading-relaxed">
-          "The key to falling asleep is rhythm. Your brain loves to follow repeating, rhythmic patterns. We activate the frequency-following response, and then we slow the speed of your brain activity down by slowing down the rhythm."
-        </p>
-        <span className="block text-xs font-semibold text-indigo-300 mt-2">
-          — Jim Donovan, M.Ed., Musician & Assistant Professor
-        </span>
-      </div>
+      <figure className="flex flex-col gap-3 border-l-2 border-ember/60 pl-4">
+        <blockquote className="text-[17px] leading-relaxed text-ink-1">
+          The key to falling asleep is rhythm. Your brain loves to follow repeating, rhythmic patterns, and when you slow
+          the rhythm down, you slow your brain activity down with it.
+        </blockquote>
+        <figcaption className="text-[13px] text-ink-3">Jim Donovan, paraphrased from the talk</figcaption>
+      </figure>
 
-      {/* Jim's Story */}
-      <section className="space-y-3">
-        <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-          <HeartPulse className="w-4 h-4 text-rose-400" />
-          <span>The Wake-Up Call</span>
+      <Story icon={HeartPulse} title="Why he looked for a method">
+        In the talk, Donovan says that in 2010 he went to hospital thinking he was having a heart attack. His doctor
+        found anxiety and long-term lack of sleep, about four hours a night, and cutting back on caffeine did not stop
+        his mind from racing at bedtime.
+      </Story>
+
+      <Story icon={Hand} title="How he found it">
+        Donovan is a drummer who leads rhythm workshops, and he noticed that groups felt calm after drumming a steady
+        pattern together. One night he sat on the edge of his bed and tapped his thighs in a steady rhythm. He says that
+        after about four minutes he felt drowsy, lay down and slept through the night.
+      </Story>
+
+      <section className="flex flex-col gap-3">
+        <h3 className="flex items-center gap-2 text-[15px] font-medium text-ink-1">
+          <Waves className="size-4 text-ink-3" strokeWidth={1.5} />
+          His explanation
         </h3>
-        <p className="text-xs text-slate-300 leading-relaxed">
-          In October 2010, Jim was rushed into an ambulance believing he was having a heart attack. After three days in the hospital, his doctor revealed he was healthy, but suffering from severe anxiety and chronic sleep deprivation (sleeping only 4 hours a night).
-        </p>
-        <p className="text-xs text-slate-300 leading-relaxed">
-          The doctor warned him: <em className="text-slate-200">"Four hours of sleep per night is sleep deprivation, and there is no quicker way to die early than to skimp on sleep."</em> Even after cutting back caffeine, Jim still couldn't stop his mind from racing at night.
+        <p className="text-[15px] leading-relaxed text-ink-2">
+          Donovan calls it the frequency-following response: the brain tends to follow a steady outside rhythm. A
+          right-left beat near a resting pulse gives racing thoughts something else to follow, and as the beat slows
+          from 68 to 36 BPM, the idea is that you wind down with it. This app follows his method, and it has not been
+          tested as a sleep treatment.
         </p>
       </section>
 
-      {/* The Discovery */}
-      <section className="space-y-3">
-        <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-          <Brain className="w-4 h-4 text-indigo-400" />
-          <span>How It Was Discovered</span>
-        </h3>
-        <p className="text-xs text-slate-300 leading-relaxed">
-          As a professional drummer leading rhythm workshops since 1999, Jim noticed that groups drumming steady unison patterns always reported feeling deeply relaxed. One night, sitting at the edge of his bed, he began lightly tapping his hands on his thighs in a steady rhythm without any drums.
-        </p>
-        <p className="text-xs text-slate-300 leading-relaxed">
-          After about four minutes, his eyelids grew heavy, he yawned, laid down, and woke up to morning sunshine—having slept seven-and-a-half continuous hours.
-        </p>
+      <section className="flex flex-col gap-2">
+        <h3 className="text-[15px] font-medium text-ink-1">The three steps</h3>
+        <ol className="flex flex-col">
+          {STEPS.map((step, i) => (
+            <li key={step.title} className="flex gap-4 border-t border-line py-4 first:border-t-0">
+              <span className="font-mono text-sm tabular-nums text-ember">{i + 1}</span>
+              <span className="min-w-0">
+                <span className="block text-[15px] text-ink-1">{step.title}</span>
+                <span className="block text-sm text-ink-2">{step.body}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
       </section>
 
-      {/* The Science */}
-      <section className="space-y-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800/80">
-        <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-          <Waves className="w-4 h-4 text-teal-400" />
-          <span>The Frequency-Following Response (FFR)</span>
-        </h3>
-        <ul className="text-xs text-slate-300 space-y-2 list-disc list-inside leading-relaxed">
-          <li>
-            <strong className="text-slate-100">Step 1 — Pattern Detection:</strong> When exposed to a repeating bilateral beat (Right, Left, Right, Left), the brain naturally synchronizes its neural electrical activity with the stimulus.
-          </li>
-          <li>
-            <strong className="text-slate-100">Step 2 — Entrainment:</strong> The auditory and tactile pulses at ~68 BPM match a calm resting physiological baseline, interrupting racing thoughts or looping songs.
-          </li>
-          <li>
-            <strong className="text-slate-100">Step 3 — Deceleration:</strong> As the rhythm decrementally slows from 68 BPM down to 36 BPM, neural oscillations downshift from high-frequency Beta (anxiety) into calm Alpha and deep Theta sleep waves.
-          </li>
-        </ul>
-      </section>
-
-      {/* 3 Step Protocol */}
-      <section className="space-y-3">
-        <h3 className="text-sm font-bold text-slate-200">
-          The 3-Step Bedtime Protocol
-        </h3>
-        <div className="space-y-2">
-          <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-300">
-            <span className="font-bold text-indigo-300">1. Tap like a ticking stopwatch:</span> Bring hands to your lap. Tap lightly: Right, Left, Right, Left.
-          </div>
-          <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-300">
-            <span className="font-bold text-indigo-300">2. Breathe slowly:</span> Inhale slowly for 4 counts, exhale slowly for 4 counts. Close your eyes.
-          </div>
-          <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-300">
-            <span className="font-bold text-indigo-300">3. Slow the rhythm down:</span> Allow the rhythm to decelerate. When you feel drowsy, simply lay back and let sleep take over.
-          </div>
-        </div>
-      </section>
-
-      {/* Start Button */}
       <button
         type="button"
         onClick={onStartPractice}
-        className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-indigo-600/20"
+        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-ember text-[15px] font-medium text-ember-ink transition-[background-color,transform] duration-150 ease-soft hover:bg-ember/90 active:scale-[0.98]"
       >
-        <span>Try the Exercise Now</span>
-        <ArrowRight className="w-4 h-4" />
+        Start a session
+        <ArrowRight className="size-4" strokeWidth={1.5} />
       </button>
-    </div>
+
+      <p className="text-[13px] leading-relaxed text-ink-3">
+        This app is not medical advice and is not affiliated with Jim Donovan or TEDx. If you often have trouble sleeping,
+        talk to a doctor.
+      </p>
+    </article>
   );
 };
+
+const Story: React.FC<{ icon: LucideIcon; title: string; children: React.ReactNode }> = ({ icon: Icon, title, children }) => (
+  <section className="flex flex-col gap-3">
+    <h3 className="flex items-center gap-2 text-[15px] font-medium text-ink-1">
+      <Icon className="size-4 text-ink-3" strokeWidth={1.5} />
+      {title}
+    </h3>
+    <p className="text-[15px] leading-relaxed text-ink-2">{children}</p>
+  </section>
+);

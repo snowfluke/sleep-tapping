@@ -1,6 +1,7 @@
 import React from 'react';
-import { Moon, EyeOff } from 'lucide-react';
 import { BreathState } from '../types';
+import { BeatDots } from './BeatDots';
+import { formatClock } from '../lib/formatClock';
 
 interface OledSleepCoverProps {
   onExit: () => void;
@@ -11,6 +12,7 @@ interface OledSleepCoverProps {
   isPlaying: boolean;
 }
 
+/** Pure black screen with dim ember text, so an OLED phone gives off almost no light on the nightstand. */
 export const OledSleepCover: React.FC<OledSleepCoverProps> = ({
   onExit,
   timeRemaining,
@@ -19,53 +21,27 @@ export const OledSleepCover: React.FC<OledSleepCoverProps> = ({
   breathState,
   isPlaying,
 }) => {
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
   return (
-    <div
+    <button
+      type="button"
       onClick={onExit}
-      className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-between p-8 select-none cursor-pointer touch-manipulation"
-      title="Tap anywhere to wake screen"
+      aria-label="Leave nightstand mode"
+      className="fixed inset-0 z-50 flex cursor-pointer touch-manipulation select-none flex-col items-center justify-between bg-black p-8 focus-visible:outline-none"
     >
-      {/* Top minimal indicator */}
-      <div className="flex items-center gap-2 text-amber-500/40 text-xs font-mono">
-        <Moon className="w-3.5 h-3.5" />
-        <span>OLED SLEEP MODE · TAP ANYWHERE TO WAKE</span>
-      </div>
+      <span className="text-xs text-ember/40">Nightstand mode, tap to wake</span>
 
-      {/* Center ultra-dim sleep focal */}
-      <div className="flex flex-col items-center justify-center space-y-6">
-        {/* Faint subtle pulsing breath ring */}
-        <div
-          className={`w-32 h-32 rounded-full border flex flex-col items-center justify-center transition-all duration-700 ${
-            currentSide === 'left'
-              ? 'border-amber-500/30 bg-amber-950/10'
-              : 'border-amber-600/30 bg-amber-950/10'
-          }`}
-        >
-          <span className="text-3xl font-mono tabular-nums text-amber-500/60 font-light">
-            {formatTime(timeRemaining)}
+      <span className="flex flex-col items-center gap-6">
+        <span className="flex size-32 flex-col items-center justify-center gap-2 rounded-full border border-ember/20">
+          <span className="font-mono text-3xl tabular-nums text-ember/60">{formatClock(timeRemaining)}</span>
+          <span className="flex items-center gap-2 font-mono text-xs tabular-nums text-ember/40">
+            {isPlaying && <BeatDots side={currentSide} dim />}
+            {currentBpm} BPM
           </span>
-          <span className="text-[11px] font-mono text-amber-600/40 mt-1">
-            {currentBpm} BPM · {currentSide.toUpperCase()}
-          </span>
-        </div>
+        </span>
+        {isPlaying && <span className="text-sm text-ember/40">{breathState.instruction}</span>}
+      </span>
 
-        {isPlaying && (
-          <p className="text-xs font-serif italic text-amber-500/40 tracking-wider">
-            {breathState.instruction}
-          </p>
-        )}
-      </div>
-
-      {/* Bottom hint */}
-      <div className="text-[11px] text-amber-900/50">
-        Zero blue light · Audio & haptics active
-      </div>
-    </div>
+      <span className="text-xs text-ember/30">Sound and vibration keep running</span>
+    </button>
   );
 };

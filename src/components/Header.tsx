@@ -1,55 +1,36 @@
 import React from 'react';
-import { Moon, Volume2, Sparkles, Smartphone } from 'lucide-react';
+import { Moon } from 'lucide-react';
+import { BeatDots } from './BeatDots';
 
 interface HeaderProps {
-  oledPitchBlack: boolean;
   onToggleOled: () => void;
-  vibrationIntensity: string;
-  currentBpm?: number;
-  isPlaying?: boolean;
+  currentBpm: number;
+  currentSide: 'left' | 'right';
+  isPlaying: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({
-  oledPitchBlack,
-  onToggleOled,
-  vibrationIntensity,
-  currentBpm,
-  isPlaying,
-}) => {
+export const Header: React.FC<HeaderProps> = ({ onToggleOled, currentBpm, currentSide, isPlaying }) => {
   return (
-    <header className="sticky top-0 z-30 w-full px-4 py-3 bg-[#070a12]/80 backdrop-blur-md border-b border-slate-800/60 flex items-center justify-between">
-      {/* Brand Zone: Clean typography */}
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-          <Moon className="w-4 h-4" />
+    <header className="z-30 w-full border-b border-line bg-night-1 tall:sticky tall:top-0">
+      <div className="mx-auto flex min-h-14 max-w-lg flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <h1 className="truncate text-base font-medium text-ink-1">Sleep Tapping</h1>
+          {isPlaying && (
+            <span className="flex items-center gap-2 font-mono text-xs tabular-nums text-ink-3">
+              <BeatDots side={currentSide} />
+              {currentBpm} BPM
+            </span>
+          )}
         </div>
-        <div>
-          <h1 className="text-base font-semibold tracking-tight text-slate-100 flex items-center gap-2">
-            BrainTap
-            {isPlaying && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-normal text-indigo-300/80">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="font-mono tabular-nums">{currentBpm} BPM</span>
-              </span>
-            )}
-          </h1>
-        </div>
-      </div>
 
-      {/* Primary actions */}
-      <div className="flex items-center gap-2">
-        {/* OLED Pitch-black / Nightstand mode toggle */}
         <button
+          type="button"
           onClick={onToggleOled}
-          title={oledPitchBlack ? 'Exit OLED Nightstand Mode' : 'Enter OLED Nightstand Mode'}
-          className={`h-9 px-3 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-all border ${
-            oledPitchBlack
-              ? 'bg-amber-500/20 text-amber-200 border-amber-500/40'
-              : 'bg-slate-900/60 hover:bg-slate-800 text-slate-300 border-slate-800'
-          }`}
+          aria-label="Nightstand mode"
+          className="flex h-9 min-w-9 items-center justify-center gap-2 rounded-lg border border-line bg-night-2 px-3 text-sm text-ink-2 transition-colors duration-150 hover:bg-night-3 hover:text-ink-1"
         >
-          <Moon className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Nightstand Mode</span>
+          <Moon className="size-4" strokeWidth={1.5} />
+          <span className="hidden sm:inline">Nightstand</span>
         </button>
       </div>
     </header>

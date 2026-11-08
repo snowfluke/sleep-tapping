@@ -1,73 +1,46 @@
 import React from 'react';
-import { PlayCircle, Sliders, CalendarCheck, BookOpen } from 'lucide-react';
+import { PlayCircle, Sliders, CalendarCheck, BookOpen, LucideIcon } from 'lucide-react';
 import { ActiveTab } from '../types';
 
 interface BottomTabBarProps {
   activeTab: ActiveTab;
   onTabChange: (tab: ActiveTab) => void;
-  isPlaying?: boolean;
+  isPlaying: boolean;
 }
 
-export const BottomTabBar: React.FC<BottomTabBarProps> = ({
-  activeTab,
-  onTabChange,
-  isPlaying,
-}) => {
-  const tabs = [
-    {
-      id: 'session' as ActiveTab,
-      label: 'Session',
-      icon: PlayCircle,
-    },
-    {
-      id: 'customize' as ActiveTab,
-      label: 'Sounds & Pace',
-      icon: Sliders,
-    },
-    {
-      id: 'challenge' as ActiveTab,
-      label: '5 Nights',
-      icon: CalendarCheck,
-    },
-    {
-      id: 'science' as ActiveTab,
-      label: 'The Science',
-      icon: BookOpen,
-    },
-  ];
+const TABS: { id: ActiveTab; label: string; icon: LucideIcon }[] = [
+  { id: 'session', label: 'Session', icon: PlayCircle },
+  { id: 'customize', label: 'Settings', icon: Sliders },
+  { id: 'challenge', label: '5 nights', icon: CalendarCheck },
+  { id: 'science', label: 'Science', icon: BookOpen },
+];
 
+export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onTabChange, isPlaying }) => {
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 bg-[#070a12]/95 backdrop-blur-md border-t border-slate-800/80 max-w-lg mx-auto"
+      className="z-40 w-full border-t border-line bg-night-0 tall:fixed tall:inset-x-0 tall:bottom-0"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className="grid grid-cols-4 items-center h-16 px-1">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          const IconComponent = tab.icon;
-
+      <div className="mx-auto grid h-16 max-w-lg grid-cols-4 items-center px-2">
+        {TABS.map(({ id, label, icon: Icon }) => {
+          const isActive = activeTab === id;
           return (
             <button
-              key={tab.id}
+              key={id}
               type="button"
-              onClick={() => onTabChange(tab.id)}
-              className={`flex flex-col items-center justify-center min-h-[48px] py-1 transition-colors select-none ${
-                isActive ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'
+              onClick={() => onTabChange(id)}
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 transition-colors duration-150 ${
+                isActive ? 'text-ink-1' : 'text-ink-3 hover:text-ink-2'
               }`}
             >
-              <div className="relative">
-                <IconComponent className={`w-5 h-5 transition-transform ${isActive ? 'scale-110' : ''}`} />
-                {tab.id === 'session' && isPlaying && (
-                  <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="relative">
+                <Icon className={`size-5 ${isActive ? 'text-ember' : ''}`} strokeWidth={1.5} />
+                {id === 'session' && isPlaying && (
+                  <span className="absolute -right-1 -top-0.5 size-1.5 rounded-full bg-ember" aria-hidden="true" />
                 )}
-              </div>
-              <span
-                className={`text-[10px] font-medium tracking-tight mt-1 ${
-                  isActive ? 'text-indigo-300 font-semibold' : 'text-slate-400'
-                }`}
-              >
-                {tab.label}
               </span>
+              <span className="max-w-full truncate text-xs">{label}</span>
             </button>
           );
         })}

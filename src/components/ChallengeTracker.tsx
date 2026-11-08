@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Trophy, CheckCircle2, Circle, Star, Calendar, MessageSquare, Plus, RotateCcw } from 'lucide-react';
+import { CheckCircle2, Circle, Star, RotateCcw, Play } from 'lucide-react';
 import { ChallengeEntry } from '../types';
+
+type Rating = 1 | 2 | 3 | 4 | 5;
+const RATINGS: Rating[] = [1, 2, 3, 4, 5];
 
 interface ChallengeTrackerProps {
   challengeEntries: ChallengeEntry[];
-  onCompleteNight: (day: number, rating: 1 | 2 | 3 | 4 | 5, notes: string) => void;
+  onCompleteNight: (day: number, rating: Rating, notes: string) => void;
   onResetChallenge: () => void;
   onLaunchChallengeSession: () => void;
 }
@@ -16,218 +19,176 @@ export const ChallengeTracker: React.FC<ChallengeTrackerProps> = ({
   onLaunchChallengeSession,
 }) => {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5>(5);
+  const [rating, setRating] = useState<Rating>(3);
   const [notes, setNotes] = useState('');
 
   const completedCount = challengeEntries.filter((e) => e.completed).length;
-  const isAllComplete = completedCount === 5;
 
-  const handleOpenLogModal = (day: number) => {
-    setSelectedDay(day);
+  const openLog = (day: number) => {
     const existing = challengeEntries.find((e) => e.day === day);
-    if (existing && existing.completed) {
-      setRating(existing.sleepQuality || 5);
-      setNotes(existing.notes || '');
-    } else {
-      setRating(5);
-      setNotes('');
-    }
+    setSelectedDay(day);
+    setRating(existing?.sleepQuality ?? 3);
+    setNotes(existing?.notes ?? '');
   };
 
-  const handleSaveNight = () => {
-    if (selectedDay !== null) {
-      onCompleteNight(selectedDay, rating, notes);
-      setSelectedDay(null);
-    }
+  const saveLog = () => {
+    if (selectedDay === null) return;
+    onCompleteNight(selectedDay, rating, notes);
+    setSelectedDay(null);
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto pb-24 px-4 pt-4 space-y-6">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-br from-indigo-950/60 to-purple-950/40 rounded-3xl p-5 border border-indigo-800/40 relative overflow-hidden">
-        <div className="relative z-10 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-indigo-300">
-              Jim Donovan's TEDx Challenge
-            </span>
-            <span className="text-xs font-mono font-medium text-indigo-200">
-              {completedCount} / 5 Nights Completed
-            </span>
-          </div>
-
-          <h2 className="text-xl font-bold text-slate-100">
-            The 5-Night Brain Tapping Experiment
-          </h2>
-
-          <p className="text-xs text-slate-300 leading-relaxed">
-            "For the next five nights, I invite you just to run the exercise for at least three minutes. Tap like a ticking stopwatch, breathe slowly, and at the end, slow the rhythm down."
-          </p>
-
-          <div className="pt-1 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onLaunchChallengeSession}
-              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all shadow-md shadow-indigo-600/30 active:scale-95"
-            >
-              Start 3-Minute Challenge Now
-            </button>
-            <button
-              type="button"
-              onClick={onResetChallenge}
-              className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1 py-1"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset</span>
-            </button>
-          </div>
+    <div className="flex flex-col gap-10 px-4 py-6">
+      <div className="flex flex-col gap-4">
+        <div>
+          <p className="text-[13px] text-ink-3">Jim Donovan's TEDx challenge</p>
+          <h2 className="mt-1 font-display text-[28px] font-normal leading-tight text-ink-1">Five nights of tapping</h2>
+        </div>
+        <p className="text-[15px] leading-relaxed text-ink-2">
+          Run the exercise for at least three minutes on each of the next five nights: tap like a ticking stopwatch,
+          breathe slowly, then let the rhythm slow down.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={onLaunchChallengeSession}
+            className="flex h-11 items-center gap-2 rounded-xl bg-ember px-4 text-[15px] font-medium text-ember-ink transition-[background-color,transform] duration-150 ease-soft hover:bg-ember/90 active:scale-[0.98]"
+          >
+            <Play className="size-4 fill-current" strokeWidth={1.5} />
+            Start a 3-minute session
+          </button>
+          <button
+            type="button"
+            onClick={onResetChallenge}
+            className="flex h-11 items-center gap-2 rounded-xl px-3 text-sm text-ink-3 transition-colors duration-150 hover:text-ink-1"
+          >
+            <RotateCcw className="size-4" strokeWidth={1.5} />
+            Reset
+          </button>
         </div>
       </div>
 
-      {/* Progress Circles */}
-      <div className="grid grid-cols-5 gap-2">
-        {challengeEntries.map((entry) => {
-          return (
+      <div className="flex flex-col gap-3">
+        <p className="font-mono text-xs tabular-nums text-ink-3">{completedCount} of 5 nights done</p>
+        <div className="grid grid-cols-5 gap-2">
+          {challengeEntries.map((entry) => (
             <button
               key={entry.day}
               type="button"
-              onClick={() => handleOpenLogModal(entry.day)}
-              className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 ${
-                entry.completed
-                  ? 'bg-emerald-950/30 border-emerald-500/50 text-emerald-300 shadow-sm'
-                  : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:border-indigo-500/50'
-              }`}
+              onClick={() => openLog(entry.day)}
+              aria-label={`Night ${entry.day}, ${entry.completed ? 'done' : 'not done'}`}
+              className="flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-line bg-night-2 transition-colors duration-150 hover:bg-night-3"
             >
               {entry.completed ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                <CheckCircle2 className="size-5 text-calm" strokeWidth={1.5} />
               ) : (
-                <Circle className="w-5 h-5 text-slate-600" />
+                <Circle className="size-5 text-ink-3" strokeWidth={1.5} />
               )}
-              <span className="text-xs font-semibold text-slate-200">Night {entry.day}</span>
-              <span className="text-[10px] text-slate-400">
-                {entry.completed ? 'Done' : 'Pending'}
-              </span>
+              <span className="font-mono text-xs tabular-nums text-ink-2">{entry.day}</span>
             </button>
-          );
-        })}
-      </div>
-
-      {/* List of nights with details */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-slate-300">Nightly Sleep Journal</h3>
-        <div className="space-y-2">
-          {challengeEntries.map((entry) => {
-            return (
-              <div
-                key={entry.day}
-                className="p-3.5 rounded-2xl bg-slate-900/40 border border-slate-800/70 flex items-start justify-between gap-3 hover:border-slate-700/80 transition-colors"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-200">Night {entry.day}</span>
-                    {entry.completed && (
-                      <span className="text-[10px] text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-800/40 font-medium">
-                        Completed
-                      </span>
-                    )}
-                    {entry.dateCompleted && (
-                      <span className="text-[11px] text-slate-500">
-                        {entry.dateCompleted}
-                      </span>
-                    )}
-                  </div>
-
-                  {entry.notes ? (
-                    <p className="text-xs text-slate-300 italic">"{entry.notes}"</p>
-                  ) : (
-                    <p className="text-xs text-slate-500">
-                      {entry.completed ? 'Completed without notes' : 'Run 3-minute session and record your rest'}
-                    </p>
-                  )}
-
-                  {entry.sleepQuality && (
-                    <div className="flex items-center gap-1 pt-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          className={`w-3.5 h-3.5 ${
-                            s <= entry.sleepQuality! ? 'text-amber-400 fill-amber-400' : 'text-slate-700'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleOpenLogModal(entry.day)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 active:scale-95 transition-all shrink-0"
-                >
-                  {entry.completed ? 'Edit Note' : 'Log Night'}
-                </button>
-              </div>
-            );
-          })}
+          ))}
         </div>
       </div>
 
-      {/* Log Modal / Bottom Drawer */}
+      <section className="flex flex-col gap-2">
+        <h3 className="text-[15px] font-medium text-ink-1">Sleep journal</h3>
+        <ul className="flex flex-col">
+          {challengeEntries.map((entry) => (
+            <li key={entry.day} className="flex items-start justify-between gap-4 border-t border-line py-4 first:border-t-0">
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className="text-[15px] font-medium text-ink-1">Night {entry.day}</span>
+                  {entry.completed && <span className="text-[13px] text-calm">Done</span>}
+                  {entry.dateCompleted && (
+                    <span className="font-mono text-xs tabular-nums text-ink-3">{entry.dateCompleted}</span>
+                  )}
+                </div>
+                <p className="text-sm text-ink-2 [overflow-wrap:anywhere]">
+                  {entry.notes || (entry.completed ? 'No notes yet' : 'Not logged yet')}
+                </p>
+                {entry.sleepQuality && (
+                  <div className="flex items-center gap-1" aria-label={`Rated ${entry.sleepQuality} of 5`}>
+                    {RATINGS.map((s) => (
+                      <Star
+                        key={s}
+                        className={`size-3.5 ${s <= entry.sleepQuality! ? 'fill-ember text-ember' : 'text-ink-3/50'}`}
+                        strokeWidth={1.5}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => openLog(entry.day)}
+                className="flex h-9 shrink-0 items-center rounded-lg border border-line bg-night-2 px-3 text-sm text-ink-2 transition-colors duration-150 hover:bg-night-3 hover:text-ink-1"
+              >
+                {entry.sleepQuality ? 'Edit' : 'Log night'}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {selectedDay !== null && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-200">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h3 className="text-base font-bold text-slate-100">
-                Log Night {selectedDay} Experience
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center sm:p-4"
+          onClick={() => setSelectedDay(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="log-night-title"
+            onClick={(e) => e.stopPropagation()}
+            className="flex w-full max-w-md flex-col gap-6 rounded-t-2xl border border-line bg-night-2 p-6 sm:rounded-2xl"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <h3 id="log-night-title" className="text-[17px] font-medium text-ink-1">
+                Night {selectedDay}
               </h3>
               <button
                 type="button"
                 onClick={() => setSelectedDay(null)}
-                className="text-slate-400 hover:text-slate-200 text-xs py-1 px-2"
+                className="h-9 rounded-lg px-3 text-sm text-ink-3 transition-colors duration-150 hover:text-ink-1"
               >
                 Cancel
               </button>
             </div>
 
-            {/* Sleep Rating */}
-            <div className="space-y-1.5">
-              <label className="text-xs text-slate-300 font-medium">How easily did your mind quiet down?</label>
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-2 text-sm text-ink-2">How quickly your mind settled</legend>
               <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((s) => (
+                {RATINGS.map((s) => (
                   <button
                     key={s}
                     type="button"
-                    onClick={() => setRating(s as 1 | 2 | 3 | 4 | 5)}
-                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 transition-colors"
+                    onClick={() => setRating(s)}
+                    aria-label={`${s} of 5`}
+                    aria-pressed={s === rating}
+                    className="flex size-11 items-center justify-center rounded-lg bg-night-3 transition-colors duration-150 hover:bg-night-1"
                   >
-                    <Star
-                      className={`w-6 h-6 ${
-                        s <= rating ? 'text-amber-400 fill-amber-400' : 'text-slate-600'
-                      }`}
-                    />
+                    <Star className={`size-5 ${s <= rating ? 'fill-ember text-ember' : 'text-ink-3'}`} strokeWidth={1.5} />
                   </button>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
-            {/* Bedtime Note */}
-            <div className="space-y-1.5">
-              <label className="text-xs text-slate-300 font-medium">Notes & observations:</label>
+            <label className="flex flex-col gap-2">
+              <span className="text-sm text-ink-2">Notes</span>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g. Started yawning after 2 minutes. Eyelids felt heavy and slept 7 hours."
                 rows={3}
-                className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full resize-y rounded-lg border border-line bg-night-1 p-3 text-base text-ink-1 focus:border-ember/60 focus:outline-none"
               />
-            </div>
+            </label>
 
-            {/* Save Button */}
             <button
               type="button"
-              onClick={handleSaveNight}
-              className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-all active:scale-[0.98]"
+              onClick={saveLog}
+              className="h-12 w-full rounded-xl bg-ember text-[15px] font-medium text-ember-ink transition-[background-color,transform] duration-150 ease-soft hover:bg-ember/90 active:scale-[0.98]"
             >
-              Save Night {selectedDay}
+              Save
             </button>
           </div>
         </div>
